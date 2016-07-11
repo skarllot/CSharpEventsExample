@@ -1,38 +1,44 @@
 ﻿using ExampleLib;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using System.ComponentModel;
 
-namespace EventsExample
+namespace WpfApp
 {
-    public partial class Form1 : Form
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
     {
+        Controller controller;
         FoldingMachine folder;
         PaintingMachine painter;
         WeldingMachine welder;
-        Controller controller;
 
-        public Form1()
+        public MainWindow()
         {
             InitializeComponent();
         }
 
-        protected override void OnLoad(EventArgs e)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            base.OnLoad(e);
-
             controller = new Controller();
             folder = new FoldingMachine();
             painter = new PaintingMachine();
             welder = new WeldingMachine();
-            
+
             painter.ValueChanged += captureMachineChange;
             welder.ValueChanged += captureMachineChange;
             folder.ValueChanged += captureMachineChange;
@@ -47,31 +53,37 @@ namespace EventsExample
 
         private void captureMachineChange(Machine sender, int value)
         {
-            ProgressBar pb;
+            ProgressBar progressbar;
             if (sender == folder)
-                pb = pbFolder;
+                progressbar = pbFolder;
             else if (sender == welder)
-                pb = pbWelder;
+                progressbar = pbWelder;
             else if (sender == painter)
-                pb = pbPainter;
+                progressbar = pbPainter;
             else
                 return;
 
-            Action call = () => pb.Value = value;
-            pb.Invoke(call);
+            // Throws an exception
+            //pb.Value = value;
+
+            progressbar.Dispatcher.Invoke(() => progressbar.Value = value);
+            //progressbar.Dispatcher.Invoke(delegate ()
+            //{
+            //    progressbar.Value = value;
+            //});
         }
 
-        private void btnStart_Click(object sender, EventArgs e)
+        private void btnInitialize_Click(object sender, RoutedEventArgs e)
         {
             controller.Start();
         }
 
-        private void btnShutdown_Click(object sender, EventArgs e)
+        private void btnShutdown_Click(object sender, RoutedEventArgs e)
         {
             controller.Shutdown();
         }
 
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        protected override void OnClosing(CancelEventArgs e)
         {
             Machine machine;
             if (painter.IsRunning)
@@ -93,8 +105,22 @@ namespace EventsExample
 
         private void captureMachineStop(Machine sender)
         {
-            Action call = () => Close();
-            Invoke(call);
+            Dispatcher.Invoke(() => Close());
+        }
+
+        private void chkMachine_Checked(object sender, RoutedEventArgs e)
+        {
+            string strA = "Hello";
+            float num = strA.CountHalf();
+            /*CheckBox checkbox;
+            if (sender == chkFolder)
+                checkbox = chkFolder;
+            else if (sender == chkPainter)
+                checkbox = chkPainter;
+            else if (sender == chkWelder)
+                checkbox = chkWelder;
+            else
+                return;*/
         }
     }
 }
