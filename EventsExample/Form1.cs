@@ -1,13 +1,5 @@
 ﻿using ExampleLib;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace EventsExample
@@ -33,10 +25,12 @@ namespace EventsExample
             painter = new PaintingMachine();
             welder = new WeldingMachine();
             
+            // Listen for value changes on machines
             painter.ValueChanged += captureMachineChange;
             welder.ValueChanged += captureMachineChange;
             folder.ValueChanged += captureMachineChange;
 
+            // Connect controller start and shutdown events on machines
             controller.OnStart += folder.Start;
             controller.OnStart += painter.Start;
             controller.OnStart += welder.Start;
@@ -47,6 +41,7 @@ namespace EventsExample
 
         private void captureMachineChange(Machine sender, int value)
         {
+            // Determine which progress bar represents sender machine
             ProgressBar pb;
             if (sender == folder)
                 pb = pbFolder;
@@ -57,6 +52,8 @@ namespace EventsExample
             else
                 return;
 
+            // Transfer progress bar value setting command to main thread
+            // to avoid race condition when setting control state.
             Action call = () => pb.Value = value;
             pb.Invoke(call);
         }
@@ -73,6 +70,7 @@ namespace EventsExample
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
+            // Determines whether any machine is running
             Machine machine;
             if (painter.IsRunning)
                 machine = painter;
@@ -82,10 +80,12 @@ namespace EventsExample
                 machine = folder;
             else
             {
+                // No machine is running then proceed closing
                 base.OnClosing(e);
                 return;
             }
 
+            // A machine is running, stop it then close current form
             e.Cancel = true;
             machine.Stopped += captureMachineStop;
             machine.Stop();
